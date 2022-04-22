@@ -1,0 +1,149 @@
+<odoo>
+    <data>
+        <!-- override tree view of order line -->
+        <record id="sale.view_order_line_tree" model="ir.ui.view">
+            <field name="name">sales orders lines view tree</field>
+            <field name="model">sale.order.line</field>
+            <field name="arch" type="xml">
+                <!-- multi_edit="1" to enable multi edit in tree view-->
+                <tree multi_edit="1" create="false">
+                    <!--Dynamic List View optional=''-->
+                    <field name="order_id"/>
+                    <field name="name"/>
+                    <field name="price_unit" optional="hide"/>
+                    <field name="price_subtotal" optional="hide"/>
+                    <field name="price_tax" optional="hide"/>
+                    <field name="discount" optional="hide"/>
+                    <field name="price_total" optional="hide"/>
+                    <!--add colours and widget to status-->
+                    <field name="approval_state" optional="show" widget="badge"
+                           decoration-danger="approval_state == 'waiting_sales_manager_approval' or approval_state == 'waiting_advisor_approval'"/>
+                    <button name="action_approve_manager" string="Approve"
+                            class="btn-success"
+                            attrs="{'invisible': [('approval_state', 'in', ('waiting_advisor_approval', 'approved'))]}"
+                            groups="sales_team.group_sale_manager"
+                            type="object"/>
+                    <button name="action_approve_advisor" string="Approve"
+                            class="btn-success"
+                            attrs="{'invisible': [('approval_state', '=', 'approved')]}"
+                            groups="sales_inherite.sales_permission_advisor_group"
+                            type="object"/>
+                    <button name="action_disapprove" string="Disapprove"
+                            class="btn-danger"
+                            attrs="{'invisible': [('approval_state', '=', 'disapproved')]}" type="object"
+                            confirm="Are you sure? disapprove!"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- override form view of order line -->
+        <record id="sale.sale_order_line_view_form_readonly" model="ir.ui.view">
+            <field name="name">sale.order.line.form.readonly</field>
+            <field name="model">sale.order.line</field>
+            <field name="arch" type="xml">
+                <form string="Sales Order Item">
+                    <sheet>
+                        <header>
+                            <button id="button_approve_action_manager" name="action_approve_manager" string="Approve"
+                                    class="btn-success"
+                                    attrs="{'invisible': [('approval_state', 'in', ('waiting_advisor_approval', 'approved'))]}"
+                                    groups="sales_team.group_sale_manager"
+                                    type="object"/>
+                            <button id="button_approve_action_advisor" name="action_approve_advisor" string="Approve"
+                                    class="btn-success"
+                                    attrs="{'invisible': [('approval_state', '=', 'approved')]}"
+                                    groups="sales_inherite.sales_permission_advisor_group"
+                                    type="object"/>
+                            <button id="button_disapprove_action" name="action_disapprove" string="Disapprove"
+                                    class="btn-danger"
+                                    attrs="{'invisible': [('approval_state', '=', 'disapproved')]}" type="object"
+                                    confirm="Are you sure? disapprove!"/>
+                            <field name="approval_state" widget="statusbar"/>
+                        </header>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="display_name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="order_id" readonly="1"/>
+                                <field name="product_id" readonly="1"/>
+                                <field name="name" readonly="1"/>
+                                <field name="product_uom_qty" readonly="1"/>
+                                <field name="qty_delivered" readonly="1"/>
+                                <field name="qty_invoiced"/>
+                                <field name="product_uom" readonly="1"/>
+                                <field name="company_id" options="{'no_create': True}"
+                                       groups="base.group_multi_company"/>
+                                <field name="order_partner_id" invisible="1"/>
+                                <field name="display_type" invisible="1"/>
+                                <field name="product_updatable" invisible="1"/>
+
+                            </group>
+                            <group>
+                                <field name="price_unit" readonly="1"/>
+                                <field name="discount" groups="product.group_discount_per_so_line" readonly="1"/>
+                                <field name="price_subtotal" widget="monetary"/>
+                                <field name="tax_id" widget="many2many_tags" readonly="1"/>
+                                <field name="price_tax" widget="monetary"/>
+                                <field name="price_total" widget="monetary"/>
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- action to manager view-->
+        <record id="orders_lines_action" model="ir.actions.act_window">
+            <field name="name">Orders Lines Action</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">sale.order.line</field>
+            <field name="domain">[('approval_state', '=', 'waiting_sales_manager_approval')]</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Thanks, There is no orders lines need approve!
+                </p>
+            </field>
+        </record>
+
+
+        <!-- action to advisor view-->
+        <record id="orders_lines_advisor_action" model="ir.actions.act_window">
+            <field name="name">Orders Lines Action</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">sale.order.line</field>
+            <field name="domain">[('approval_state', '=', 'waiting_advisor_approval')]</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Thanks, There is no orders lines need approve!
+                </p>
+            </field>
+        </record>
+
+
+        <!-- add Need Approval (advisor) to dropdown menu in sale module-->
+        <menuitem
+                id="sales_orders_submenu"
+                name="Need Approval"
+                parent="sale.sale_order_menu"
+                action="orders_lines_advisor_action"
+                groups="sales_permission_advisor_group"
+                sequence="2"/>
+
+        <!-- add Need Approval (manager) to dropdown menu in sale module-->
+        <menuitem
+                id="sales_orders_advisor_submenu"
+                name="Need Approval"
+                parent="sale.sale_order_menu"
+                groups="sales_team.group_sale_manager"
+                action="orders_lines_action"
+                sequence="3"/>
+    </data>
+</odoo>

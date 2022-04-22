@@ -1,0 +1,45 @@
+<odoo>
+    <data>
+        <!-- add approval_state field in order form view -->
+        <record id="view_order_form_inherit" model="ir.ui.view">
+            <field name="name">sales.order.inherited</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="sale_description"/>
+                    <field name="approval_state"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- add approval_state field in order line tree view-->
+        <record id="view_order_line_inherit" model="ir.ui.view">
+            <field name="name">sales.order.inherited</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='price_subtotal']"
+                       position="after">
+                    <field name="approval_state" widget="badge"
+                           decoration-success="approval_state == 'approved'"
+                           decoration-info="approval_state == 'waiting_sales_manager_approval' or approval_state == 'waiting_advisor_approval'"
+                           decoration-danger="approval_state == 'disapproved'"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- add approval_state field in order tree view-->
+        <record id="view_order_tree_inherit" model="ir.ui.view">
+            <field name="name">sales.order.inherited</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_quotation_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="sale_description"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
